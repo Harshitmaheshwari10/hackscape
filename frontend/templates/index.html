@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-Powered Demand Forecasting Dashboard for Supply Chain Management">
+    <title>AI Demand Forecasting Dashboard - Geek Room</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Socket.IO for Real-time Updates -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <h1>AI Demand Forecasting</h1>
+            </div>
+            <div class="breadcrumb">
+                <span id="current-section">Overview</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search products, alerts...">
+            </div>
+            <div class="notifications">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge" id="alert-count">0</span>
+            </div>
+            <div class="user-profile">
+                <img src="https://ui-avatars.com/api/?name=Geek+Room&background=4f46e5&color=fff" alt="User">
+                <div class="user-info">
+                    <span class="user-name">Geek Room</span>
+                    <span class="user-role">Hackathon 2025</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="#" class="nav-link active" data-section="overview">
+                            <i class="fas fa-home"></i>
+                            <span>Overview</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" data-section="inventory">
+                            <i class="fas fa-boxes"></i>
+                            <span>Inventory Tracking</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" data-section="forecasting">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Demand Forecasting</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" data-section="alerts">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Alerts</span>
+                            <span class="badge" id="sidebar-alert-count">0</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" data-section="optimization">
+                            <i class="fas fa-cogs"></i>
+                            <span>Process Optimization</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" data-section="suppliers">
+                            <i class="fas fa-truck"></i>
+                            <span>Suppliers</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" data-section="weather">
+                            <i class="fas fa-cloud-sun"></i>
+                            <span>Weather Impact</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot active"></span>
+                    <span>System Online</span>
+                </div>
+                <p class="version">v2.0.0 - Enhanced ML Edition</p>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Overview Section -->
+            <section id="overview-section" class="content-section active">
+                <div class="section-header">
+                    <h2>Dashboard Overview</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-secondary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button class="btn btn-primary" onclick="exportReport()">
+                            <i class="fas fa-download"></i> Export Report
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon blue">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <p class="kpi-label">Total Products</p>
+                            <h3 class="kpi-value" id="kpi-total-products">0</h3>
+                            <span class="kpi-trend positive">
+                                <i class="fas fa-arrow-up"></i> 5.2%
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon green">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <p class="kpi-label">Inventory Value</p>
+                            <h3 class="kpi-value" id="kpi-inventory-value">$0</h3>
+                            <span class="kpi-trend positive">
+                                <i class="fas fa-arrow-up"></i> 8.1%
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon orange">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <p class="kpi-label">Critical Alerts</p>
+                            <h3 class="kpi-value" id="kpi-critical-alerts">0</h3>
+                            <span class="kpi-trend negative">
+                                <i class="fas fa-arrow-down"></i> 2 new
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon purple">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <p class="kpi-label">Forecast Accuracy</p>
+                            <h3 class="kpi-value" id="kpi-forecast-accuracy">0%</h3>
+                            <span class="kpi-trend positive">
+                                <i class="fas fa-arrow-up"></i> 1.5%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Inventory Distribution by Location</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="inventory-distribution-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Recent Alerts Overview</h3>
+                        </div>
+                        <div class="alerts-preview" id="alerts-preview">
+                            <div class="loading">Loading alerts...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product-Specific Demand Graph -->
+                <div class="charts-row">
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <h3>Demand Forecast by Product</h3>
+                            <select id="overview-product-selector" class="chart-filter">
+                                <option value="">Select Product...</option>
+                            </select>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="demand-trend-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inventory Tracking Section -->
+            <section id="inventory-section" class="content-section">
+                <div class="section-header">
+                    <h2>Real-time Inventory Tracking</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-primary" onclick="refreshInventory()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Inventory Summary Cards -->
+                <div class="inventory-summary">
+                    <div class="summary-card">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <h4 id="optimal-count">0</h4>
+                            <p>Optimal Stock</p>
+                        </div>
+                    </div>
+                    <div class="summary-card warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <h4 id="low-stock-count">0</h4>
+                            <p>Low Stock</p>
+                        </div>
+                    </div>
+                    <div class="summary-card info">
+                        <i class="fas fa-arrow-up"></i>
+                        <div>
+                            <h4 id="overstock-count">0</h4>
+                            <p>Overstock</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventory Table -->
+                <div class="table-card">
+                    <h3>Inventory Overview</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>SKU</th>
+                                <th>Category</th>
+                                <th>Current Stock</th>
+                                <th>Reorder Point</th>
+                                <th>Status</th>
+                                <th>Value</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body">
+                            <tr>
+                                <td colspan="8" class="text-center">Loading inventory data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Product-Specific Graphs Section -->
+                <div class="product-graphs-section">
+                    <div class="section-header">
+                        <h3>Product Analytics</h3>
+                        <select id="inventory-product-selector" class="chart-filter">
+                            <option value="">Select Product...</option>
+                        </select>
+                    </div>
+
+                    <!-- Product Tracker -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-route"></i> Product Movement Tracker</h3>
+                        </div>
+                        <div id="product-tracker">
+                            <div class="loading">Select a product to view movement history</div>
+                        </div>
+                    </div>
+
+                    <!-- Stock Level Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-chart-area"></i> Stock Level Over Time</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="product-stock-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Demand Forecasting Section -->
+            <section id="forecasting-section" class="content-section">
+                <div class="section-header">
+                    <h2>AI Demand Forecasting</h2>
+                    <div class="section-actions">
+                        <select class="filter-select" id="product-filter-forecast">
+                            <option value="PROD-001">Electronics Components</option>
+                            <option value="PROD-002">Automotive Parts</option>
+                            <option value="PROD-003">Medical Supplies</option>
+                        </select>
+                        <select class="filter-select" id="period-filter">
+                            <option value="12">12 Months</option>
+                            <option value="6">6 Months</option>
+                            <option value="3">3 Months</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="generateForecast()">
+                            <i class="fas fa-brain"></i> Generate Forecast
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Forecast Metrics -->
+                <div class="forecast-metrics">
+                    <div class="metric-card">
+                        <h4>Model Accuracy</h4>
+                        <div class="metric-value">
+                            <span id="model-accuracy">87.3%</span>
+                            <small class="metric-label">MAPE: 8.5%</small>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Trend Direction</h4>
+                        <div class="metric-value">
+                            <span id="trend-direction">Increasing</span>
+                            <small class="metric-label">+5.2% monthly</small>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Peak Demand</h4>
+                        <div class="metric-value">
+                            <span id="peak-month">December</span>
+                            <small class="metric-label">Seasonal high</small>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Confidence Level</h4>
+                        <div class="metric-value">
+                            <span id="confidence-level">95%</span>
+                            <small class="metric-label">High reliability</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Forecast Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Historical vs Predicted Demand</h3>
+                        <div class="chart-legend">
+                            <span class="legend-item">
+                                <span class="legend-color" style="background: #4f46e5;"></span>
+                                Historical
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background: #10b981;"></span>
+                                Forecast
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background: rgba(16, 185, 129, 0.2);"></span>
+                                Confidence Interval
+                            </span>
+                        </div>
+                    </div>
+                    <div class="chart-container large">
+                        <canvas id="forecast-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- ML Insights -->
+                <div class="insights-card">
+                    <h3><i class="fas fa-lightbulb"></i> AI Insights & Recommendations</h3>
+                    <div id="forecast-insights">
+                        <p class="loading">Generating ML-driven insights...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Alerts Section -->
+            <section id="alerts-section" class="content-section">
+                <div class="section-header">
+                    <h2>Automated Alerts & Notifications</h2>
+                    <div class="section-actions">
+                        <select class="filter-select" id="severity-filter">
+                            <option value="">All Severities</option>
+                            <option value="critical">Critical</option>
+                            <option value="warning">Warning</option>
+                            <option value="info">Info</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="markAllRead()">
+                            <i class="fas fa-check"></i> Mark All Read
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Alert Statistics -->
+                <div class="alert-stats">
+                    <div class="stat-card critical">
+                        <h3 id="critical-alert-count">0</h3>
+                        <p>Critical Alerts</p>
+                    </div>
+                    <div class="stat-card warning">
+                        <h3 id="warning-alert-count">0</h3>
+                        <p>Warnings</p>
+                    </div>
+                    <div class="stat-card info">
+                        <h3 id="info-alert-count">0</h3>
+                        <p>Information</p>
+                    </div>
+                    <div class="stat-card total">
+                        <h3 id="total-alert-count">0</h3>
+                        <p>Total Alerts</p>
+                    </div>
+                </div>
+
+                <!-- Alerts List -->
+                <div class="alerts-container" id="alerts-container">
+                    <div class="loading">Loading alerts...</div>
+                </div>
+            </section>
+
+            <!-- Optimization Section -->
+            <section id="optimization-section" class="content-section">
+                <div class="section-header">
+                    <h2>Process Optimization & Recommendations</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-primary" onclick="refreshOptimization()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportOptimization()">
+                            <i class="fas fa-file-excel"></i> Export
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Optimization Summary -->
+                <div class="optimization-summary">
+                    <div class="summary-metric">
+                        <i class="fas fa-shopping-cart"></i>
+                        <div>
+                            <h4 id="items-to-reorder">0</h4>
+                            <p>Items to Reorder</p>
+                        </div>
+                    </div>
+                    <div class="summary-metric">
+                        <i class="fas fa-dollar-sign"></i>
+                        <div>
+                            <h4 id="total-investment">$0</h4>
+                            <p>Investment Required</p>
+                        </div>
+                    </div>
+                    <div class="summary-metric">
+                        <i class="fas fa-piggy-bank"></i>
+                        <div>
+                            <h4 id="annual-savings">$0</h4>
+                            <p>Estimated Savings</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations Table -->
+                <div class="table-card">
+                    <h3>ML-Driven Replenishment Recommendations</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Product</th>
+                                <th>Current Stock</th>
+                                <th>Forecasted Demand</th>
+                                <th>Recommended Order</th>
+                                <th>Reorder Date</th>
+                                <th>Cost</th>
+                                <th>Savings</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="optimization-table-body">
+                            <tr>
+                                <td colspan="9" class="text-center">Loading recommendations...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Resource Allocation -->
+                <div id="resource-allocation-container" class="mt-3">
+                    <div class="loading">Loading resource allocation recommendations...</div>
+                </div>
+            </section>
+
+            <!-- Suppliers Section -->
+            <section id="suppliers-section" class="content-section">
+                <div class="section-header">
+                    <h2>Supplier Performance</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-primary" onclick="refreshSuppliers()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Suppliers Grid -->
+                <div class="suppliers-grid" id="suppliers-grid">
+                    <div class="loading">Loading supplier data...</div>
+                </div>
+
+                <!-- Performance Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Supplier Performance Comparison</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="supplier-performance-chart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Weather Impact Section -->
+            <section id="weather-section" class="content-section">
+                <div class="section-header">
+                    <h2>Weather Impact Analysis</h2>
+                    <div class="section-actions">
+                        <select id="weather-product-selector" class="chart-filter">
+                            <option value="">Select Product...</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="refreshWeather()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Product-Specific Weather Impact -->
+                <div id="weather-impact-container">
+                    <div class="loading">Select a product to view weather impact...</div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <p>Loading data...</p>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+</body>
+</html>
