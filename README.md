@@ -10,7 +10,3 @@ AI-powered supply chain management dashboard with real-time inventory tracking, 
 ✅ Process Optimization
 ✅ Interactive Dashboard
 ✅ External Data Integration
-
-## Quick Start
-
-### 1. Setup Virtual Environment
