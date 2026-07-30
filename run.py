@@ -4,8 +4,8 @@ Enhanced Main runner script with SocketIO support
 
 import sys
 import os
+import numpy as np
 
-# Add backend to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
 from backend.app import app, socketio
