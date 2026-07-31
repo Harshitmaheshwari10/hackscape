@@ -28,19 +28,6 @@ Backend	Python, Flask, Flask-SocketIO
 ML	NumPy, Scikit-learn, Pandas
 Architecture	MVC + RESTful API + WebSocket
 
-desc.
-Inventory → Stock tracking, transfers, adjustments
-
-Forecasting → 12-month ML predictions
-
-Optimization → Reorder recommendations & resource allocation
-
-Alerts → Real-time notifications
-
-Suppliers → Performance metrics
-
-Weather → Impact analysis
-
 Common Operations
 Transfer Stock → Click "Transfer" on product row → Select locations → Confirm
 
